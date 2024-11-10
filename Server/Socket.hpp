@@ -14,6 +14,7 @@ class Server {
 private:
     WSAData wsaData;
     SOCKET sockfd;
+    static const int MaxDataLen = 1024;
 public:
     bool InitWinSock(void) {
         // Startup Winsock.
@@ -31,7 +32,7 @@ public:
         if(sockfd == INVALID_SOCKET) {
             // Creation Failed.
             perror("Socket creation failed");
-            cerr << "Socket creation failed: " << GetLastError() << endl;
+            cerr << "Socket creation failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
     }
@@ -45,7 +46,7 @@ public:
         if(bind(sockfd,(sockaddr*)(&serverAddress),sizeof(serverAddress)) == SOCKET_ERROR) {
             // Bind Failed.
             perror("Socket bind failed");
-            cerr << "Socket bind failed: " << GetLastError() << endl;
+            cerr << "Socket bind failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
     }
@@ -55,7 +56,7 @@ public:
         if(listen(sockfd,num) < 0) {
             // Setting Failed.
             perror("Socket(listener) creation failed");
-            cerr << "Socket(listener) creation failed: " << GetLastError() << endl;
+            cerr << "Socket(listener) creation failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
     }
@@ -69,10 +70,26 @@ public:
             if(newSocket == INVALID_SOCKET) {
                 // Accept Failed.
                 perror("Socket Accept Failed");
-                cerr << "Socket Accept Failed: " << GetLastError() << endl;
+                cerr << "Socket Accept Failed: " << WSAGetLastError() << endl;
                 continue;
             } return newSocket;
         }
+    }
+
+    bool SendData(SOCKET ClientSocket,const char* Data) {
+        // Send Data To Client.
+        if(send(ClientSocket,Data,strlen(Data),0) == SOCKET_ERROR) {
+            // Send Failed.
+            perror("Send Failed");
+            cerr << "Send failed: " << WSAGetLastError() << endl;
+            return true;
+        } return false;
+    }
+
+    string RecvData(SOCKET ClientSocket) {
+        char buffer[MaxDataLen];
+        recv(ClientSocket,buffer,MaxDataLen,0);
+        return string(buffer);
     }
 
     void ExitWinSock(void) {
@@ -85,6 +102,7 @@ class Client {
 private:
     WSAData wsaData;
     SOCKET sockfd;
+    static const int MaxDataLen = 1024;
 public:
     bool InitWinSock(void) {
         // Startup Winsock.
@@ -102,7 +120,7 @@ public:
         if(sockfd == INVALID_SOCKET) {
             // Creation Failed.
             perror("Socket creation failed");
-            cerr << "Socket creation failed: " << GetLastError() << endl;
+            cerr << "Socket creation failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
     }
@@ -114,9 +132,25 @@ public:
         serverAddress.sin_port = htons(port);
         serverAddress.sin_addr.s_addr = inet_addr(IP.c_str());
         if(connect(sockfd,(sockaddr*)(&serverAddress),sizeof(serverAddress)) == SOCKET_ERROR) {
-            cerr << "Connection failed: " << GetLastError() << endl;
+            cerr << "Connection failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
+    }
+
+    bool SendData(const char* Data) {
+        // Send Data To Server.
+        if(send(sockfd,Data,strlen(Data),0) == SOCKET_ERROR) {
+            // Send Failed.
+            perror("Send Failed");
+            cerr << "Send failed: " << WSAGetLastError() << endl;
+            return true;
+        } return false;
+    }
+
+    string RecvData(void) {
+        char buffer[MaxDataLen];
+        recv(sockfd,buffer,MaxDataLen,0);
+        return string(buffer);
     }
 
     void ExitWinSock(void) {
