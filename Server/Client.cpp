@@ -1,10 +1,15 @@
 #include "Socket.hpp"
 
-Client client;
+Server server;
 int main(void) {
-    client.InitWinSock();
-    client.CreateSocket();
-    client.ConnectSocket(8080,"127.0.0.1");
+    server.InitWinSock();
+    server.CreateSocket();
+    server.BindSocket(8080,"0.0.0.0");
+    server.ListenSocket(3);
+    SOCKET Sock = server.AcceptSocket();
+    server.SendData(Sock,"Hello world!");
+    cout << server.RecvData(Sock) << endl;
+    server.ExitWinSock();
     system("pause");
     return 0;
 }
