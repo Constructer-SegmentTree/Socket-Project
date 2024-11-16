@@ -20,7 +20,6 @@ public:
         // Startup Winsock.
         if(WSAStartup(MAKEWORD(2,2),&wsaData) != 0) {
             // Startup Failed.
-            perror("WSA startup failed");
             cerr << "WSAStartup Failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
@@ -31,7 +30,6 @@ public:
         sockfd = socket(AF_INET,SOCK_STREAM,0);
         if(sockfd == INVALID_SOCKET) {
             // Creation Failed.
-            perror("Socket creation failed");
             cerr << "Socket creation failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
@@ -39,13 +37,12 @@ public:
 
     bool BindSocket(unsigned short port,string IP) {
         // Bind Socket (16bits).
-        sockaddr_in serverAddress;
+        sockaddr_in serverAddress = {0};
         serverAddress.sin_family = AF_INET;
         serverAddress.sin_addr.s_addr = inet_addr(IP.c_str());
         serverAddress.sin_port = htons(port);
         if(bind(sockfd,(sockaddr*)(&serverAddress),sizeof(serverAddress)) == SOCKET_ERROR) {
             // Bind Failed.
-            perror("Socket bind failed");
             cerr << "Socket bind failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
@@ -55,7 +52,6 @@ public:
         // Set Socket To Listenly.
         if(listen(sockfd,num) < 0) {
             // Setting Failed.
-            perror("Socket(listener) creation failed");
             cerr << "Socket(listener) creation failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
@@ -69,7 +65,6 @@ public:
             SOCKET newSocket = accept(sockfd,(sockaddr*)(&sockfd),&clientAddressSize);
             if(newSocket == INVALID_SOCKET) {
                 // Accept Failed.
-                perror("Socket Accept Failed");
                 cerr << "Socket Accept Failed: " << WSAGetLastError() << endl;
                 continue;
             } return newSocket;
@@ -80,7 +75,6 @@ public:
         // Send Data To Client.
         if(send(ClientSocket,Data,strlen(Data),0) == SOCKET_ERROR) {
             // Send Failed.
-            perror("Send Failed");
             cerr << "Send failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
@@ -88,7 +82,7 @@ public:
 
     string RecvData(SOCKET ClientSocket) {
         char buffer[MaxDataLen];
-        recv(ClientSocket,buffer,MaxDataLen,0);
+        recv(ClientSocket,buffer,sizeof(buffer),0);
         return string(buffer);
     }
 
@@ -108,7 +102,6 @@ public:
         // Startup Winsock.
         if(WSAStartup(MAKEWORD(2,2),&wsaData) != 0) {
             // Startup Failed.
-            perror("WSA startup failed");
             cerr << "WSAStartup Failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
@@ -119,7 +112,6 @@ public:
         sockfd = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
         if(sockfd == INVALID_SOCKET) {
             // Creation Failed.
-            perror("Socket creation failed");
             cerr << "Socket creation failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
@@ -141,7 +133,6 @@ public:
         // Send Data To Server.
         if(send(sockfd,Data,strlen(Data),0) == SOCKET_ERROR) {
             // Send Failed.
-            perror("Send Failed");
             cerr << "Send failed: " << WSAGetLastError() << endl;
             return true;
         } return false;
@@ -149,7 +140,7 @@ public:
 
     string RecvData(void) {
         char buffer[MaxDataLen];
-        recv(sockfd,buffer,MaxDataLen,0);
+        recv(sockfd,buffer,sizeof(buffer),0);
         return string(buffer);
     }
 
